@@ -23,40 +23,28 @@ export default function AboutIntro({ onComplete }) {
       }
     };
 
-    if (window.__audioMuted) {
-      console.log("Muted, fallback timer starting");
-      const fallbackTimeout = setTimeout(handleTransition, 2000);
-      return () => {
-        active = false;
-        clearTimeout(fallbackTimeout);
-      };
-    }
+    // Always transition after 2500ms
+    const transitionTimeout = setTimeout(handleTransition, 2500);
 
-    const sound = new Audio(startSoundSrc);
-    sound.loop = false;
-    sound.volume = 1.0;
-
-    const handleEnded = () => {
-      console.log("SHHH ended");
-      handleTransition();
-    };
-
-    sound.addEventListener('ended', handleEnded);
-
-    console.log("SHHH started");
-    sound.play()
-      .catch((err) => {
-        if (err.name === 'AbortError') {
-          return;
-        }
-        console.error('Audio play error (About Intro Sound):', err);
-        handleTransition();
+    let sound = null;
+    if (!window.__audioMuted) {
+      sound = new Audio(startSoundSrc);
+      sound.loop = false;
+      sound.volume = 1.0;
+      console.log("SHHH started if allowed");
+      sound.play().catch((err) => {
+        console.log("Audio blocked:", err);
       });
+    }
 
     return () => {
       active = false;
-      sound.removeEventListener('ended', handleEnded);
-      sound.pause();
+      clearTimeout(transitionTimeout);
+      if (sound) {
+        try {
+          sound.pause();
+        } catch (e) {}
+      }
     };
   }, [onComplete]);
 

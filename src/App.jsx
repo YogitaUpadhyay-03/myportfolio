@@ -173,9 +173,11 @@ export default function App() {
       loadingAudioRef.current.loop = false;
       loadingAudioRef.current.volume = 1.0;
       console.log('Loading audio started');
-      loadingAudioRef.current.play().catch((err) => {
-        console.error('Audio play error (Loading):', err);
-      });
+      if (!isMuted) {
+        loadingAudioRef.current.play().catch((err) => {
+          console.log("Audio blocked:", err);
+        });
+      }
     } else if (screen === 'shhh') {
       // 2. SHHH Screen: play start.mp3 once (non-looping)
       stopAudio(loadingAudioRef, "Loading");
@@ -184,36 +186,29 @@ export default function App() {
         clearTimeout(menuTimeoutRef.current);
         menuTimeoutRef.current = null;
       }
-      if (window.__audioMuted) {
-        const fallbackTimeout = setTimeout(() => {
-          console.log('Muted fallback ended, transitioning to main-menu');
-          setScreen('main-menu');
-        }, 2000);
-        return () => {
-          clearTimeout(fallbackTimeout);
-        };
-      }
 
-      if (!startAudioRef.current) {
-        startAudioRef.current = new Audio(startSoundSrc);
-      }
-      const audio = startAudioRef.current;
-      audio.loop = false;
-      audio.volume = 1.0;
-
-      const handleAudioEnded = () => {
-        console.log('Start audio ended, transitioning to main-menu');
+      // Always transition to main-menu after exactly 2500ms
+      const transitionTimeout = setTimeout(() => {
+        console.log('SHHH screen timeout, transitioning to main-menu');
         setScreen('main-menu');
-      };
+      }, 2500);
 
-      audio.addEventListener('ended', handleAudioEnded);
-      console.log('Start audio started');
-      audio.play().catch((err) => {
-        console.error('Audio play error (Start):', err);
-      });
+      if (!isMuted) {
+        if (!startAudioRef.current) {
+          startAudioRef.current = new Audio(startSoundSrc);
+        }
+        const audio = startAudioRef.current;
+        audio.loop = false;
+        audio.volume = 1.0;
+        audio.currentTime = 0;
+        console.log('Start audio started');
+        audio.play().catch((err) => {
+          console.log("Audio blocked:", err);
+        });
+      }
 
       return () => {
-        audio.removeEventListener('ended', handleAudioEnded);
+        clearTimeout(transitionTimeout);
         stopAudio(startAudioRef, "Start");
       };
     } else if (['main-menu', 'cafeteria-certs', 'uiux-projects', 'uiux-experience', 'about', 'graphic-design'].includes(screen)) {
@@ -221,7 +216,7 @@ export default function App() {
       stopAudio(loadingAudioRef, "Loading");
       stopAudio(startAudioRef, "Start");
 
-      if (audioUnlocked) {
+      if (!isMuted && audioUnlocked) {
         if (!menuAudioRef.current) {
           menuAudioRef.current = new Audio(loadingSoundSrc);
         }
@@ -233,7 +228,7 @@ export default function App() {
           audio.currentTime = 0;
           console.log('Main menu audio started');
           audio.play().catch((err) => {
-            console.error('Audio play error (Main Menu Start):', err);
+            console.log("Audio blocked:", err);
           });
         }
       }
@@ -247,7 +242,7 @@ export default function App() {
         menuTimeoutRef.current = null;
       }
 
-      if (audioUnlocked) {
+      if (!isMuted && audioUnlocked) {
         if (!exitAudioRef.current) {
           exitAudioRef.current = new Audio(exitSoundSrc);
         }
@@ -257,7 +252,7 @@ export default function App() {
         audio.currentTime = 0;
         console.log('Exit transition audio started');
         audio.play().catch((err) => {
-          console.error('Audio play error (Exit Transition Start):', err);
+          console.log("Audio blocked:", err);
         });
       }
     } else {

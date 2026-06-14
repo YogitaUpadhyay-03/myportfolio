@@ -21,10 +21,14 @@ export default function MainMenu({ onNavigate }) {
 
   // Sound and opening delay trigger
   const handleUiuxClick = () => {
-    const audio = new Audio(popupSoundSrc);
-    audio.volume = 1.0;
-    audio.loop = false;
-    audio.play().catch((err) => console.error("Audio playback error (popup_sound.mp3):", err));
+    if (!window.__audioMuted) {
+      const audio = new Audio(popupSoundSrc);
+      audio.volume = 1.0;
+      audio.loop = false;
+      audio.play().catch((err) => {
+        console.log("Audio blocked:", err);
+      });
+    }
 
     setTimeout(() => {
       setIsPopupOpen(true);
