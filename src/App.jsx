@@ -17,6 +17,7 @@ import GraphicProjects from './components/GraphicProjects';
 import loadingSoundSrc from './assets/loading.mp3';
 import startSoundSrc from './assets/start.mp3';
 import exitSoundSrc from './assets/exit.mp3';
+import footstepsSoundSrc from './assets/footsteps.mp3';
 // Global Audio Interceptor for mute functionality
 if (typeof window !== 'undefined') {
   window.__activeAudios = window.__activeAudios || [];
@@ -76,6 +77,7 @@ export default function App() {
   const startAudioRef = useRef(null);
   const menuAudioRef = useRef(null);
   const exitAudioRef = useRef(null);
+  const footstepsAudioRef = useRef(null);
   const menuTimeoutRef = useRef(null);
 
   // Sync isMuted changes with window.__audioMuted, localStorage, and pause/reset all audios when muted
@@ -97,7 +99,7 @@ export default function App() {
           });
         }
         // Also explicitly stop refs inside App.jsx
-        const refs = [loadingAudioRef, startAudioRef, menuAudioRef, exitAudioRef];
+        const refs = [loadingAudioRef, startAudioRef, menuAudioRef, exitAudioRef, footstepsAudioRef];
         refs.forEach(ref => {
           if (ref.current) {
             try {
@@ -118,7 +120,8 @@ export default function App() {
       loadingAudioRef,
       startAudioRef,
       menuAudioRef,
-      exitAudioRef
+      exitAudioRef,
+      footstepsAudioRef
     };
     return () => {
       delete window._appAudioRefs;
@@ -163,6 +166,7 @@ export default function App() {
       // 1. Loading Screen: play loading.mp3 immediately
       stopAudio(startAudioRef, "Start");
       stopAudio(menuAudioRef, "Menu");
+      stopAudio(footstepsAudioRef, "Footsteps");
       if (menuTimeoutRef.current) {
         clearTimeout(menuTimeoutRef.current);
         menuTimeoutRef.current = null;
@@ -173,7 +177,7 @@ export default function App() {
       loadingAudioRef.current.loop = false;
       loadingAudioRef.current.volume = 1.0;
       console.log('Loading audio started');
-      if (!isMuted) {
+      if (!isMuted && !window.__audioMuted) {
         loadingAudioRef.current.play().catch((err) => {
           console.log("Audio blocked:", err);
         });
@@ -182,6 +186,7 @@ export default function App() {
       // 2. SHHH Screen: play start.mp3 once (non-looping)
       stopAudio(loadingAudioRef, "Loading");
       stopAudio(menuAudioRef, "Menu");
+      stopAudio(footstepsAudioRef, "Footsteps");
       if (menuTimeoutRef.current) {
         clearTimeout(menuTimeoutRef.current);
         menuTimeoutRef.current = null;
@@ -193,7 +198,7 @@ export default function App() {
         setScreen('main-menu');
       }, 2500);
 
-      if (!isMuted) {
+      if (!isMuted && !window.__audioMuted) {
         if (!startAudioRef.current) {
           startAudioRef.current = new Audio(startSoundSrc);
         }
@@ -211,12 +216,13 @@ export default function App() {
         clearTimeout(transitionTimeout);
         stopAudio(startAudioRef, "Start");
       };
-    } else if (['main-menu', 'cafeteria-certs', 'uiux-projects', 'uiux-experience', 'about', 'graphic-design'].includes(screen)) {
-      // 3. Ambient screens: play "loading.mp3", volume 0.25/0.50, loop natively
+    } else if (['main-menu', 'cafeteria-certs', 'about'].includes(screen)) {
+      // 3. Ambient menu screens: play "loading.mp3", volume 0.25/0.50, loop natively
       stopAudio(loadingAudioRef, "Loading");
       stopAudio(startAudioRef, "Start");
+      stopAudio(footstepsAudioRef, "Footsteps");
 
-      if (!isMuted && audioUnlocked) {
+      if (!isMuted && !window.__audioMuted && audioUnlocked) {
         if (!menuAudioRef.current) {
           menuAudioRef.current = new Audio(loadingSoundSrc);
         }
@@ -232,17 +238,40 @@ export default function App() {
           });
         }
       }
+    } else if (['uiux-projects', 'uiux-experience', 'graphic-design'].includes(screen)) {
+      // 4. Content screens: play footsteps.mp3
+      stopAudio(loadingAudioRef, "Loading");
+      stopAudio(startAudioRef, "Start");
+      stopAudio(menuAudioRef, "Menu");
+
+      if (!isMuted && !window.__audioMuted && audioUnlocked) {
+        if (!footstepsAudioRef.current) {
+          footstepsAudioRef.current = new Audio(footstepsSoundSrc);
+        }
+        const audio = footstepsAudioRef.current;
+        audio.volume = 0.5;
+        audio.loop = true;
+
+        if (audio.paused) {
+          audio.currentTime = 0;
+          console.log('Footsteps audio started');
+          audio.play().catch((err) => {
+            console.log("Audio blocked:", err);
+          });
+        }
+      }
     } else if (screen === 'returning-splash') {
       stopAudio(loadingAudioRef, "Loading");
       stopAudio(startAudioRef, "Start");
       stopAudio(menuAudioRef, "Menu");
+      stopAudio(footstepsAudioRef, "Footsteps");
 
       if (menuTimeoutRef.current) {
         clearTimeout(menuTimeoutRef.current);
         menuTimeoutRef.current = null;
       }
 
-      if (!isMuted && audioUnlocked) {
+      if (!isMuted && !window.__audioMuted && audioUnlocked) {
         if (!exitAudioRef.current) {
           exitAudioRef.current = new Audio(exitSoundSrc);
         }
@@ -260,6 +289,7 @@ export default function App() {
       stopAudio(startAudioRef, "Start");
       stopAudio(menuAudioRef, "Menu");
       stopAudio(exitAudioRef, "Exit");
+      stopAudio(footstepsAudioRef, "Footsteps");
 
       if (menuTimeoutRef.current) {
         clearTimeout(menuTimeoutRef.current);
@@ -273,6 +303,9 @@ export default function App() {
       }
       if (screen === 'returning-splash') {
         stopAudio(exitAudioRef, "Exit");
+      }
+      if (['uiux-projects', 'uiux-experience', 'graphic-design'].includes(screen)) {
+        stopAudio(footstepsAudioRef, "Footsteps");
       }
     };
   }, [screen, audioUnlocked, hasStarted, isMuted]);
