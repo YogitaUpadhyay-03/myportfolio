@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import ResumePopup from './ResumePopup';
 import heroImg from '../assets/hero.png';
 import videoSrc from '../assets/videos.mp4';
 import projectsIcon from '../assets/projects_icon.png';
@@ -18,6 +19,7 @@ import exitButton from '../assets/exit_button.png';
  */
 export default function MainMenu({ onNavigate }) {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [showResumePopup, setShowResumePopup] = useState(false);
 
   // Sound and opening delay trigger
   const handleUiuxClick = () => {
@@ -169,7 +171,7 @@ export default function MainMenu({ onNavigate }) {
 
               {/* Circle 2: Projects */}
               <button
-                onClick={() => console.log('Projects clicked')}
+                onClick={() => setShowResumePopup(true)}
                 className="group relative w-14 h-14 sm:w-16 sm:h-16 rounded-full border-2 border-white bg-transparent hover:bg-white/10 hover:scale-110 active:scale-95 transition-all duration-200 flex items-center justify-center focus:outline-none shadow-[0_4px_10px_rgba(0,0,0,0.4)]"
               >
                 <img
@@ -292,6 +294,10 @@ export default function MainMenu({ onNavigate }) {
           </motion.button>
         )}
       </AnimatePresence>
+
+      {showResumePopup && (
+        <ResumePopup onClose={() => setShowResumePopup(false)} />
+      )}
     </div>
   );
 }
