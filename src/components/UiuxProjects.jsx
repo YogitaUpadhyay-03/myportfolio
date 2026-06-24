@@ -15,7 +15,6 @@ export default function UiuxProjects({ onBack }) {
       tags: ["React", "Tailwind CSS", "Framer Motion", "Figma"],
       status: "COMPLETED",
       links: {
-        figma: "https://www.figma.com/design/ZhZ0hBvGKce5rXWhumG5DV/portfolio?node-id=0-1&t=2W9q6YSw4BYKbHg3-1",
         github: "https://github.com/YogitaUpadhyay-03/myportfolio"
       }
     },
@@ -127,7 +126,7 @@ export default function UiuxProjects({ onBack }) {
                       rel="noopener noreferrer"
                       className="font-vcr text-sm md:text-base text-[#F5EDB0] bg-transparent border border-[#F5EDB0] px-3.5 py-1.5 rounded-full hover:bg-[#F5EDB0]/10 hover:border-[#F5EDB0] transition-all uppercase tracking-wider select-none flex items-center gap-0.5"
                     >
-                      [ {key.toUpperCase()} ↗ ]
+                      [ {project.title === "AMONG US PORTFOLIO" && key === "github" ? "VIEW SOURCE" : key.toUpperCase()} ↗ ]
                     </a>
                   ))}
                 </div>
